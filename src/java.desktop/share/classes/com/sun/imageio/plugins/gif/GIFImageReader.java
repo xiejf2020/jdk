@@ -1007,24 +1007,21 @@ public class GIFImageReader extends ImageReader {
                         }
                     }
 
-                    if (tableIndex >= prefix.length) {
-                        throw new IIOException("Code buffer limit reached,"
-                                + " no End of Image tag present, possibly data is corrupted. ");
-                    }
+                    if (tableIndex < 4096) {
+                        int ti = tableIndex;
+                        int oc = oldCode;
 
-                    int ti = tableIndex;
-                    int oc = oldCode;
+                        prefix[ti] = oc;
+                        suffix[ti] = initial[newSuffixIndex];
+                        initial[ti] = initial[oc];
+                        length[ti] = length[oc] + 1;
 
-                    prefix[ti] = oc;
-                    suffix[ti] = initial[newSuffixIndex];
-                    initial[ti] = initial[oc];
-                    length[ti] = length[oc] + 1;
-
-                    ++tableIndex;
-                    if ((tableIndex == (1 << codeSize)) &&
-                        (tableIndex < 4096)) {
-                        ++codeSize;
-                        codeMask = (1 << codeSize) - 1;
+                        ++tableIndex;
+                        if ((tableIndex == (1 << codeSize)) &&
+                            (tableIndex < 4096)) {
+                            ++codeSize;
+                            codeMask = (1 << codeSize) - 1;
+                        }
                     }
                 }
 
