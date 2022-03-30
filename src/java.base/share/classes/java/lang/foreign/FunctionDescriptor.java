@@ -24,13 +24,10 @@
  */
 package java.lang.foreign;
 
-import java.lang.constant.Constable;
-import java.lang.constant.ConstantDesc;
-import java.lang.constant.ConstantDescs;
-import java.lang.constant.DynamicConstantDesc;
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,7 +49,7 @@ import jdk.internal.javac.PreviewFeature;
  * @since 19
  */
 @PreviewFeature(feature=PreviewFeature.Feature.FOREIGN)
-public sealed class FunctionDescriptor implements Constable permits FunctionDescriptor.VariadicFunction {
+public sealed class FunctionDescriptor permits FunctionDescriptor.VariadicFunction {
 
     private final MemoryLayout resLayout;
     private final List<MemoryLayout> argLayouts;
@@ -73,7 +70,7 @@ public sealed class FunctionDescriptor implements Constable permits FunctionDesc
      * {@return the argument layouts associated with this function descriptor}.
      */
     public List<MemoryLayout> argumentLayouts() {
-        return argLayouts;
+        return Collections.unmodifiableList(argLayouts);
     }
 
     /**
@@ -213,23 +210,6 @@ public sealed class FunctionDescriptor implements Constable permits FunctionDesc
         return Objects.hash(argLayouts, resLayout, firstVariadicArgumentIndex());
     }
 
-     /**
-     * {@return the nominal descriptor for this function descriptor, if one can be constructed}
-     */
-    @Override
-    public Optional<DynamicConstantDesc<FunctionDescriptor>> describeConstable() {
-        List<ConstantDesc> constants = new ArrayList<>();
-        constants.add(resLayout == null ? AbstractLayout.MH_VOID_FUNCTION : AbstractLayout.MH_FUNCTION);
-        if (resLayout != null) {
-            constants.add(resLayout.describeConstable().get());
-        }
-        for (MemoryLayout argLayout : argLayouts) {
-            constants.add(argLayout.describeConstable().get());
-        }
-        return Optional.of(DynamicConstantDesc.ofNamed(
-                ConstantDescs.BSM_INVOKE, "function", AbstractLayout.CD_FUNCTION_DESC, constants.toArray(new ConstantDesc[0])));
-    }
-
     static final class VariadicFunction extends FunctionDescriptor {
 
         private final int firstVariadicIndex;
@@ -263,11 +243,6 @@ public sealed class FunctionDescriptor implements Constable permits FunctionDesc
         @Override
         public FunctionDescriptor dropReturnLayout() {
             throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Optional<DynamicConstantDesc<FunctionDescriptor>> describeConstable() {
-            return Optional.empty();
         }
     }
 }
