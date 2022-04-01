@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import jdk.internal.foreign.LayoutPath;
@@ -390,7 +391,7 @@ public sealed interface MemoryLayout permits AbstractLayout, SequenceLayout, Gro
      * locations, using a <em>dynamic</em> index (of type {@code long}), which is multiplied by this layout size and then added
      * to the offset of the selected layout. Equivalent to the following code:
      * {@snippet lang=java :
-     * MemoryLayout.sequenceLayout(Long.MAX_VALUE, this)
+     * MemoryLayout.sequenceLayout(0, this)
      *             .varHandle(PathElement.sequenceElement());
      * }
      *
@@ -405,7 +406,7 @@ public sealed interface MemoryLayout permits AbstractLayout, SequenceLayout, Gro
         PathElement[] newElements = new PathElement[elements.length + 1];
         newElements[0] = PathElement.sequenceElement();
         System.arraycopy(elements, 0, newElements, 1, elements.length);
-        return computePathOp(LayoutPath.rootPath(MemoryLayout.sequenceLayout(Long.MAX_VALUE, this)),
+        return computePathOp(LayoutPath.rootPath(MemoryLayout.sequenceLayout(0, this)),
                 LayoutPath::dereferenceHandle, Set.of(), newElements);
     }
 
@@ -672,10 +673,12 @@ public sealed interface MemoryLayout permits AbstractLayout, SequenceLayout, Gro
      * @param elementLayout the sequence element layout.
      * @return the new sequence layout with the given element layout and size.
      * @throws IllegalArgumentException if {@code elementCount < 0}.
+     * @throws IllegalArgumentException if the computation {@code elementCount * elementLayout.bitSize()} overflows.
      */
     static SequenceLayout sequenceLayout(long elementCount, MemoryLayout elementLayout) {
         AbstractLayout.checkSize(elementCount, true);
-        return new SequenceLayout(elementCount, Objects.requireNonNull(elementLayout));
+        return wrapOverflow(() ->
+                new SequenceLayout(elementCount, Objects.requireNonNull(elementLayout)));
     }
 
     /**
@@ -683,13 +686,16 @@ public sealed interface MemoryLayout permits AbstractLayout, SequenceLayout, Gro
      *
      * @param elements The member layouts of the struct layout.
      * @return a struct layout with the given member layouts.
+     * @throws IllegalArgumentException if the sum of the {@linkplain #bitSize() bit sizes} of the member layouts
+     * overflows.
      */
     static GroupLayout structLayout(MemoryLayout... elements) {
         Objects.requireNonNull(elements);
-        return new GroupLayout(GroupLayout.Kind.STRUCT,
-                Stream.of(elements)
-                        .map(Objects::requireNonNull)
-                        .collect(Collectors.toList()));
+        return wrapOverflow(() ->
+                new GroupLayout(GroupLayout.Kind.STRUCT,
+                        Stream.of(elements)
+                                .map(Objects::requireNonNull)
+                                .collect(Collectors.toList())));
     }
 
     /**
@@ -704,5 +710,13 @@ public sealed interface MemoryLayout permits AbstractLayout, SequenceLayout, Gro
                 Stream.of(elements)
                         .map(Objects::requireNonNull)
                         .collect(Collectors.toList()));
+    }
+
+    private static <L extends MemoryLayout> L wrapOverflow(Supplier<L> layoutSupplier) {
+        try {
+            return layoutSupplier.get();
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException("Layout size exceeds Long.MAX_VALUE");
+        }
     }
 }
