@@ -529,6 +529,7 @@ class CheckedFeatures {
         {"linux-ppc64",     "com.sun.jdi.SharedMemoryAttach"},
         {"linux-ppc64le",   "com.sun.jdi.SharedMemoryAttach"},
         {"linux-s390x",     "com.sun.jdi.SharedMemoryAttach"},
+        {"linux-riscv32",   "com.sun.jdi.SharedMemoryAttach"},
         {"linux-riscv64",   "com.sun.jdi.SharedMemoryAttach"},
         {"macosx-amd64",    "com.sun.jdi.SharedMemoryAttach"},
         {"mac-x64",         "com.sun.jdi.SharedMemoryAttach"},
@@ -555,6 +556,7 @@ class CheckedFeatures {
         {"linux-ppc64",     "com.sun.jdi.SharedMemoryListen"},
         {"linux-ppc64le",   "com.sun.jdi.SharedMemoryListen"},
         {"linux-s390x",     "com.sun.jdi.SharedMemoryListen"},
+        {"linux-riscv32",   "com.sun.jdi.SharedMemoryListen"},
         {"linux-riscv64",   "com.sun.jdi.SharedMemoryListen"},
         {"macosx-amd64",    "com.sun.jdi.SharedMemoryListen"},
         {"mac-x64",         "com.sun.jdi.SharedMemoryListen"},
@@ -602,6 +604,9 @@ class CheckedFeatures {
         {"linux-s390x",     "com.sun.jdi.CommandLineLaunch", "dt_shmem"},
         {"linux-s390x",     "com.sun.jdi.RawCommandLineLaunch", "dt_shmem"},
 
+        {"linux-riscv32",   "com.sun.jdi.CommandLineLaunch", "dt_shmem"},
+        {"linux-riscv32",   "com.sun.jdi.RawCommandLineLaunch", "dt_shmem"},
+
         {"linux-riscv64",   "com.sun.jdi.CommandLineLaunch", "dt_shmem"},
         {"linux-riscv64",   "com.sun.jdi.RawCommandLineLaunch", "dt_shmem"},
 
@@ -642,6 +647,7 @@ class CheckedFeatures {
         {"linux-ppc64",     "dt_shmem"},
         {"linux-ppc64le",   "dt_shmem"},
         {"linux-s390x",     "dt_shmem"},
+        {"linux-riscv32",   "dt_shmem"},
         {"linux-riscv64",   "dt_shmem"},
         {"macosx-amd64",    "dt_shmem"},
         {"mac-x64",         "dt_shmem"},
